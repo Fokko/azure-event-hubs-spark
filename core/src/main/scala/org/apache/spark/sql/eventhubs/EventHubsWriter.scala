@@ -65,7 +65,7 @@ private[eventhubs] object EventHubsWriter extends Logging {
       sparkSession: SparkSession,
       queryExecution: QueryExecution,
       parameters: Map[String, String],
-      clientFactory: (EventHubsConf) => Client
+      clientFactory: EventHubsConf => Client
   ): Unit = {
     val schema = queryExecution.analyzed.output
     validateQuery(schema, parameters)

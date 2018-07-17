@@ -51,7 +51,8 @@ private[eventhubs] object EventHubsSourceOffset {
    */
   def apply(offsetTuples: (String, Int, SequenceNumber)*): EventHubsSourceOffset = {
     EventHubsSourceOffset(
-      offsetTuples.map { case (n, p, s) => (new NameAndPartition(n, p), s) }.toMap)
+      offsetTuples.map { case (n, p, s) => (new NameAndPartition(n, p), s) }.toMap
+    )
   }
 
   /**

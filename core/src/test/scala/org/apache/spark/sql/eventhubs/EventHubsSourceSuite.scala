@@ -17,40 +17,31 @@
 
 package org.apache.spark.sql.eventhubs
 
-import java.io.{ BufferedWriter, FileInputStream, OutputStream, OutputStreamWriter }
+import java.io.{BufferedWriter, FileInputStream, OutputStream, OutputStreamWriter}
 import java.nio.charset.StandardCharsets.UTF_8
 import java.util.concurrent.atomic.AtomicInteger
 
-import org.apache.qpid.proton.amqp.{
-  Binary,
-  Decimal128,
-  Decimal32,
-  Decimal64,
-  Symbol,
-  UnsignedByte,
-  UnsignedInteger,
-  UnsignedLong,
-  UnsignedShort
-}
-import org.apache.spark.eventhubs.utils.{ EventHubsTestUtils, SimulatedClient }
-import org.apache.spark.eventhubs.{ EventHubsConf, EventPosition, NameAndPartition }
+import org.apache.qpid.proton.amqp.{Binary, Decimal128, Decimal32, Decimal64, Symbol, UnsignedByte, UnsignedInteger, UnsignedLong, UnsignedShort}
+import org.apache.spark.eventhubs.utils.{EventHubsTestUtils, SimulatedClient}
+import org.apache.spark.eventhubs.{EventHubsConf, EventPosition, NameAndPartition}
 import org.apache.spark.sql.Dataset
 import org.apache.spark.sql.execution.streaming._
-import org.apache.spark.sql.functions.{ count, window }
+import org.apache.spark.sql.functions.{count, window}
 import org.apache.spark.sql.streaming.util.StreamManualClock
-import org.apache.spark.sql.streaming.{ ProcessingTime, StreamTest }
+import org.apache.spark.sql.streaming.{ProcessingTime, StreamTest}
 import org.apache.spark.sql.test.SharedSQLContext
 import org.apache.spark.util.Utils
-import org.json4s.NoTypeHints
+import org.json4s.{Formats, NoTypeHints}
 import org.json4s.jackson.Serialization
 import org.scalatest.concurrent.PatienceConfiguration.Timeout
+import org.scalatest.time.Span
 import org.scalatest.time.SpanSugar._
 
 abstract class EventHubsSourceTest extends StreamTest with SharedSQLContext {
 
   protected var testUtils: EventHubsTestUtils = _
 
-  implicit val formats = Serialization.formats(NoTypeHints)
+  implicit val formats: AnyRef with Formats = Serialization.formats(NoTypeHints)
 
   override def beforeAll: Unit = {
     super.beforeAll
@@ -65,7 +56,7 @@ abstract class EventHubsSourceTest extends StreamTest with SharedSQLContext {
     super.afterAll()
   }
 
-  override val streamingTimeout = 30.seconds
+  override val streamingTimeout: Span = 30.seconds
 
   protected def makeSureGetOffsetCalled = AssertOnQuery { q =>
     // Because EventHubsSource's initialPartitionOffsets is set lazily, we need to make sure
@@ -264,7 +255,7 @@ class EventHubsSourceSuite extends EventHubsSourceTest {
 
   test("maxOffsetsPerTrigger with non-uniform partitions") {
     val name = newEventHubs()
-    val eventHub = testUtils.createEventHubs(name, DefaultPartitionCount)
+    testUtils.createEventHubs(name, DefaultPartitionCount)
 
     testUtils.send(name, partition = Some(0), data = 100 to 200)
     testUtils.send(name, partition = Some(1), data = 10 to 20)
@@ -366,7 +357,7 @@ class EventHubsSourceSuite extends EventHubsSourceTest {
   }
 
   private def testFromLatestSeqNos(eh: String): Unit = {
-    val eventHub = testUtils.createEventHubs(eh, DefaultPartitionCount)
+    testUtils.createEventHubs(eh, DefaultPartitionCount)
     testUtils.send(eh, partition = Some(0), Seq(-1))
 
     require(testUtils.getEventHubs(eh).getPartitions.size === 4)
@@ -413,7 +404,7 @@ class EventHubsSourceSuite extends EventHubsSourceTest {
   }
 
   private def testFromEarliestSeqNos(eh: String): Unit = {
-    val eventHub = testUtils.createEventHubs(eh, DefaultPartitionCount)
+    testUtils.createEventHubs(eh, DefaultPartitionCount)
 
     require(testUtils.getEventHubs(eh).getPartitions.size === 4)
     testUtils.send(eh, data = 1 to 3) // round robin events across partitions

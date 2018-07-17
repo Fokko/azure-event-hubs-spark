@@ -47,14 +47,18 @@ private[spark] class EventHubsRDD(sc: SparkContext,
 
   import org.apache.spark.eventhubs._
 
-  override def getPartitions: Array[Partition] = {
-    for { o <- offsetRanges.sortWith(_.partitionId < _.partitionId) } yield
-      new EventHubsRDDPartition(o.partitionId,
-                                o.nameAndPartition,
-                                o.fromSeqNo,
-                                o.untilSeqNo,
-                                o.preferredLoc)
-  }
+  override def getPartitions: Array[Partition] =
+    offsetRanges
+      .sortBy(_.partitionId)
+      .map { o =>
+        new EventHubsRDDPartition(
+          o.partitionId,
+          o.nameAndPartition,
+          o.fromSeqNo,
+          o.untilSeqNo,
+          o.preferredLoc
+        )
+    }
 
   override def count: Long = offsetRanges.map(_.count).sum
 

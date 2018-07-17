@@ -33,7 +33,7 @@ import org.apache.spark.unsafe.types.UTF8String.IntWrapper
  */
 private[eventhubs] class EventHubsWriteTask(parameters: Map[String, String],
                                             inputSchema: Seq[Attribute],
-                                            clientFactory: (EventHubsConf) => Client)
+                                            clientFactory: EventHubsConf => Client)
     extends EventHubsRowWriter(inputSchema) {
 
   private var sender: Client = _
